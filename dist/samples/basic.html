@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>chartjs-plugin-trace / sample</title>
+    <link rel="stylesheet" type="text/css" href="index.css" />
+    <link rel="icon" type="image/ico" href="favicon.ico" />
+
+    <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
+    <script src="../chartjs-plugin-crosshair.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div class="title">
+        <span class="main">chartjs-plugin-crosshair</span>
+        <span class="name">Sample</span>
+      </div>
+      <div class="caption">
+        <a href="http://www.chartjs.org">Chart.js</a>
+        plugin to draw crosshair lines, interpolate values and zoom
+      </div>
+      <div class="links">
+        <a class="btn btn-docs" href="https://chartjs-plugin-crosshair.netlify.com"> Documentation </a>
+        <a class="btn btn-gh" href="https://github.com/abelheinsbroek/chartjs-plugin-crosshair"> GitHub </a>
+      </div>
+    </div>
+    <h3>Basic Example</h3>
+    <p>Try dragging to zoom in!</p>
+    <div class="chart"><canvas id="chart0"></canvas></div>
+    <p>Now works even with line charts</p>
+    <div class="chart"><canvas id="chart1"></canvas></div>
+    <h3>Linked Charts</h3>
+    <div class="split"><canvas id="chart2"></canvas></div>
+    <div class="split"><canvas id="chart3"></canvas></div>
+    <div class="chart"><canvas id="chart4"></canvas></div>
+    <h3>Panning Zoom</h3>
+    <p>Use left and right arrows to pan!</p>
+    <div class="chart"><canvas id="chart5"></canvas></div>
+  </body>
+
+  <script>
+    function generateDataset(shift, label, color) {
+      var data = []
+      var x = 0
+      while (x < 30) {
+        data.push({ x: x, y: Math.sin(shift + x / 3) })
+        x += Math.random()
+      }
+      var dataset = {
+        backgroundColor: color,
+        borderColor: color,
+        showLine: true,
+        fill: false,
+        pointRadius: 2,
+        label: label,
+        data: data,
+        lineTension: 0,
+        interpolate: true,
+      }
+      return dataset
+    }
+
+    const generateLineData = (lines) => {
+      const labels = [1, 2, 3, 4, 5]
+
+      const datasets = lines.map((color) => ({
+        data: labels.map(it => Math.random() * labels.length + it / labels.length),
+        backgroundColor: color,
+        borderColor: color,
+        interpolate: true,
+        label: `I'm ${color}`
+      }))
+
+      return { labels, datasets }
+    }
+
+    const tooltip = {
+      mode: "interpolate",
+      intersect: false,
+      callbacks: {
+        title: ([i]) => {
+          let x = i?.element?.x
+          x = x || x === 0 ? x.toFixed(2) : ""
+
+          return x
+        },
+        label: i => {
+          let label = i?.dataset?.label || ""
+          if (label) label = `${label}: `
+
+          let val = i?.element?.y
+          val = val || val === 0 ? val.toFixed(2) : ""
+
+          return `${label}${val}`
+        },
+      },
+    }
+
+    var chart0 = new Chart(document.getElementById("chart0").getContext("2d"), {
+      type: "scatter",
+      options: {
+        plugins: {
+          tooltip,
+        },
+      },
+      data: {
+        datasets: [generateDataset(0, "A", "red"), generateDataset(1, "B", "green"), generateDataset(2, "C", "blue")],
+      },
+    })
+
+    var chart1 = new Chart(document.getElementById("chart1").getContext("2d"), {
+      type: "line",
+      options: {
+        plugins: {
+          crosshair: {
+            sync: {
+              enabled: false,
+            },
+          },
+          tooltip,
+        },
+      },
+      data: generateLineData(["red", "green", "blue"]),
+    })
+
+    var chart2 = new Chart(document.getElementById("chart2").getContext("2d"), {
+      type: "scatter",
+      options: {
+        plugins: { tooltip },
+      },
+      data: {
+        datasets: [generateDataset(0, "A", "red")],
+      },
+    })
+    var chart3 = new Chart(document.getElementById("chart3").getContext("2d"), {
+      type: "scatter",
+      options: {
+        plugins: { tooltip },
+      },
+      data: {
+        datasets: [generateDataset(1, "B", "green")],
+      },
+    })
+    var chart4 = new Chart(document.getElementById("chart4").getContext("2d"), {
+      type: "scatter",
+      options: {
+        plugins: { tooltip },
+      },
+      data: {
+        datasets: [generateDataset(1, "C", "blue")],
+      },
+    })
+
+    var chart5 = new Chart(document.getElementById("chart5").getContext("2d"), {
+      type: "scatter",
+      options: {
+        plugins: {
+          crosshair: {
+            sync: {
+              enabled: false,
+            },
+            pan: {
+              incrementer: 3, // Defaults to 5 if not included.
+            },
+          },
+          tooltip,
+        },
+        animation: {
+          duration: 0,
+        },
+
+        responsiveAnimationDuration: 0,
+      },
+      data: {
+        datasets: [generateDataset(0, "A", "red"), generateDataset(1, "B", "green"), generateDataset(2, "C", "blue")],
+      },
+    })
+
+    var panZoom = function (e) {
+      if (e.keyCode === 37) {
+        chart5.panZoom(-5)
+      } else if (e.keyCode === 39) {
+        chart5.panZoom(5)
+      }
+    }
+
+    window.addEventListener("keydown", panZoom)
+  </script>
+</html>
