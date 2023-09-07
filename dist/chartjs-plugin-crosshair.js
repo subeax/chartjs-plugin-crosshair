@@ -190,12 +190,12 @@ var defaultOptions = {
     dashPattern: [],
   },
   sync: {
-    enabled: true,
+    enabled: false,
     group: 1,
     suppressTooltips: false,
   },
   zoom: {
-    enabled: true,
+    enabled: false,
     zoomboxBackgroundColor: "rgba(66,133,244,0.2)",
     zoomboxBorderColor: "#48F",
     zoomButtonText: "Reset Zoom",
@@ -333,14 +333,20 @@ var TracePlugin = {
     if (e.original.type === "mouseup") {
       buttons = 0;
     }
-
+    
+    // do not transmit click events to prevent unwanted changing of synced
+    // charts. We do need to transmit an event to stop zooming on synced
+    // charts however.
+    var eventType = e.original.type == "click" ? "mousemove" : e.original.type;
     var newEvent = {
-      type: e.original.type === "click" ? "mousemove" : e.original.type, // do not transmit click events to prevent unwanted changing of synced charts. We do need to transmit a event to stop zooming on synced charts however.
+      type: eventType,
       chart: chart,
       x: xScale.getPixelForValue(e.xValue),
       y: e.original.y,
       native: {
         buttons: buttons,
+        // ChartJS filters events to plugins by the event's native type
+        type: eventType
         // Possible fix
         // type: e.original.type == "click" ? "mousemove" : e.original.type
       },
@@ -350,7 +356,7 @@ var TracePlugin = {
   },
 
   afterEvent: function (chart, event) {
-    if (chart.config.options.scales.x.length === 0) {
+    if (chart.config.options.scales.x == undefined || chart.config.options.scales.x.length == 0) {
       return
     }
 
@@ -438,7 +444,7 @@ var TracePlugin = {
   },
 
   afterDraw: function (chart) {
-    if (!chart.crosshair.enabled) {
+    if (chart.crosshair == undefined || !chart.crosshair.enabled) {
       return
     }
 
@@ -455,7 +461,7 @@ var TracePlugin = {
 
   beforeTooltipDraw: function (chart) {
     // suppress tooltips on dragging
-    return !chart.crosshair.dragStarted && !chart.crosshair.suppressTooltips
+    return chart.crosshair == undefined || !chart.crosshair.dragStarted && !chart.crosshair.suppressTooltips
   },
 
   resetZoom: function (chart) {
