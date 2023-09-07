@@ -53,6 +53,7 @@ export default {
       enabled: false,
       suppressUpdate: false,
       x: null,
+      y: null,
       originalData: [],
       originalXRange: {},
       dragStarted: false,
@@ -147,6 +148,12 @@ export default {
       return
     }
 
+    var yScale = this.getYScale(chart)
+
+    if (!yScale) {
+      return
+    }
+
     // Safari fix
     var buttons = e.original.native.buttons === undefined ? e.original.native.which : e.original.native.buttons
     if (e.original.type === "mouseup") {
@@ -161,7 +168,7 @@ export default {
       type: eventType,
       chart: chart,
       x: xScale.getPixelForValue(e.xValue),
-      y: e.original.y,
+      y: yScale.getPixelForValue(e.yValue), //e.original.y,
       native: {
         buttons: buttons,
         // ChartJS filters events to plugins by the event's native type
@@ -193,6 +200,12 @@ export default {
       return
     }
 
+    var yScale = this.getYScale(chart)
+
+    if (!yScale) {
+      return
+    }
+
     if (chart.crosshair.ignoreNextEvents > 0) {
       chart.crosshair.ignoreNextEvents -= 1
       return
@@ -214,6 +227,7 @@ export default {
       event.syncGroup = syncGroup
       event.original = e
       event.xValue = xScale.getValueForPixel(e.x)
+      event.yValue = yScale.getValueForPixel(e.y)
       window.dispatchEvent(event)
     }
 
@@ -258,6 +272,7 @@ export default {
     }
 
     chart.crosshair.x = e.x
+    chart.crosshair.y = e.y
 
     chart.draw()
   },
@@ -466,6 +481,7 @@ export default {
   },
 
   drawTraceLine: function (chart) {
+    var xScale = this.getXScale(chart)    
     var yScale = this.getYScale(chart)
 
     var lineWidth = this.getOption(chart, "line", "width")
@@ -474,9 +490,11 @@ export default {
     var snapEnabled = this.getOption(chart, "snap", "enabled")
 
     var lineX = chart.crosshair.x
+    var lineY = chart.crosshair.y
 
     if (snapEnabled && chart._active.length) {
       lineX = chart._active[0].element.x
+      lineY = chart._active[0].element.y
     }
 
     chart.ctx.beginPath()
@@ -486,6 +504,15 @@ export default {
     chart.ctx.strokeStyle = color
     chart.ctx.lineTo(lineX, yScale.getPixelForValue(yScale.min))
     chart.ctx.stroke()
+
+    chart.ctx.beginPath()
+    chart.ctx.setLineDash(dashPattern)
+    chart.ctx.moveTo(xScale.getPixelForValue(xScale.min), lineY)  // Assuming xScale.min exists
+    chart.ctx.lineWidth = lineWidth
+    chart.ctx.strokeStyle = color
+    chart.ctx.lineTo(xScale.getPixelForValue(xScale.max), lineY)  // Assuming xScale.max exists
+    chart.ctx.stroke()
+    
     chart.ctx.setLineDash([])
   },
 
