@@ -6,6 +6,7 @@
   "license": "MIT",
   "main": "dist/chartjs-plugin-crosshair.js",
   "module": "dist/chartjs-plugin-crosshair.esm.js",
+  "types": "types/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/subeax/chartjs-plugin-crosshair.git"
@@ -16,7 +17,8 @@
     "crosshair"
   ],
   "files": [
-    "dist/*.js"
+    "dist/*.js",
+    "types/*.d.ts"
   ],
   "scripts": {
     "watch": "gulp build --watch",
